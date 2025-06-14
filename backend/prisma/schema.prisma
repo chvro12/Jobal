@@ -1,0 +1,115 @@
+// Schéma Prisma pour Jobal
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String   @id @default(uuid())
+  email           String   @unique
+  username        String   @unique
+  password        String
+  isEmailVerified Boolean  @default(false)
+  role            Role     @default(USER)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Advertiser {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  password  String
+  company   String?
+  contact   String?
+  campaigns Campaign[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Campaign {
+  id           String     @id @default(uuid())
+  title        String
+  description  String
+  url          String
+  duration     Int        // en secondes
+  viewsWanted  Int
+  viewsDone    Int        @default(0)
+  costTotal    Int
+  isActive     Boolean    @default(true)
+  advertiser   Advertiser @relation(fields: [advertiserId], references: [id])
+  advertiserId String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Withdrawal {
+  id         String   @id @default(uuid())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String
+  amount     Int
+  method     String
+  status     WithdrawalStatus @default(PENDING)
+  details    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+enum WithdrawalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Transaction {
+  id         String   @id @default(uuid())
+  user       User?    @relation(fields: [userId], references: [id])
+  userId     String?
+  advertiser Advertiser? @relation(fields: [advertiserId], references: [id])
+  advertiserId String?
+  type       String
+  amount     Int
+  status     String
+  createdAt  DateTime @default(now())
+}
+
+model Survey {
+  id          String   @id @default(uuid())
+  provider    String   // ex: Pollfish
+  externalId  String?
+  title       String
+  reward      Int      // en XOF
+  estimatedTime Int?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model MicroTask {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  reward      Int      // en XOF
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Offerwall {
+  id          String   @id @default(uuid())
+  provider    String   // ex: AdGate, OfferToro
+  url         String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum Role {
+  USER
+  ADVERTISER
+  ADMIN
+} 
